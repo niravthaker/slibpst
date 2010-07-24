@@ -3,7 +3,7 @@ import org.junit._
 import Assert._
 
 class PSTPageParserTest {
-	@Test def testParsePage(){
-		
-	}
+    @Test def testParsePage(){
+        
+    }
 }
