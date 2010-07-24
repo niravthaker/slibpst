@@ -6,8 +6,8 @@ import Assert._
 
 
 class PSTHeaderParserTest {
+	val p = new PSTHeaderParser("/media/Development_/NiravNameSpace/Profession/CSAM/archive/archive.pst")
     @Test def testParseHeader(){
-        var p = new PSTHeaderParser("/media/Development_/NiravNameSpace/Profession/CSAM/archive/archive.pst")
         val header = p.parseHeader
         assertNotNull(header)
         assertEquals(Integer.valueOf("4E444221",16), header.magic)
@@ -35,6 +35,10 @@ class PSTHeaderParserTest {
         assertNotNull(bref)
         assertNotNull(bref.bid)
         assertNotNull(bref.ib)
+    }
+    
+    @Test def lookupFirstAMap{
+    	p.firstAMap
     }
     
 }

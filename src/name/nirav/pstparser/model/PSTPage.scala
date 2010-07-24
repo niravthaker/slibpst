@@ -1,5 +1,7 @@
 package name.nirav.pstparser.model
 
+import name.nirav.pstparser.enums.PSTFormat
+
 
 class PageTrailer[A <: AnyVal]{
     var pageType       : Byte  = _
@@ -19,7 +21,18 @@ trait BitMap{
     def free   (pageNum : Int) = rgb clear pageNum
 }
 
-class AMapPage[A <: AnyVal] extends Trailer[A] with BitMap
+class AMapPage[A <: AnyVal] extends Trailer[A] with BitMap{
+	
+}
+object AMapPageParser{
+	def parse(bytes : Array[Byte], format : PSTFormat){
+//		if(format == PSTFormat.ANSI)
+////			return new AMapPage[Int](bytes)
+//		else 
+////			return new AMapPage[Long](bytes)
+//			
+	}
+}
 
 class PageMap[A <: AnyVal] extends AMapPage{
     override def reserve(pageNum : Int) { 
@@ -28,9 +41,9 @@ class PageMap[A <: AnyVal] extends AMapPage{
     override def free   (pageNum : Int) {
         iterate8(pageNum, super.free)
     }
+    
     def iterate8(s : Int, f: (Int) => Unit){
-        val t = s + 8
-        for(i <- s to t) f(i)
+        for(i <- s to  s + 8) f(i)
     }
 }
 
@@ -38,7 +51,7 @@ class PageMap[A <: AnyVal] extends AMapPage{
 class DListPageEntry(word: Int){
     val _20BitMask = 0xFFFFF000
     
-    def getAMapPageNum   = word &  _20BitMask
+    def getAMapPageNum   = (word &  _20BitMask) >>> 12
     def getAMapFreeSlots = word & ~_20BitMask
     
 }

@@ -1,16 +1,24 @@
 package name.nirav.pstparser
 import java.io._
 import Implicits._
+import Constants._
 import name.nirav.pstparser.model._
 import name.nirav.pstparser.enums._
 
 class PSTHeaderParser(file: String) {
-    var pstFile = new File(file)
-    
+    val raf     = new RandomAccessFile(new File(file), "r")    
     implicit def HEtoLE(ra: RandomAccessFile) = new RAFImplicit(ra)
 
+    def firstAMap{
+    	val header = parseHeader
+    	val isAnsi = header.version  == PSTFormat.ANSI
+    	raf seek AMAP_FILE_OFFSET
+    	val amap = new AMapPage
+    	
+    }
+    
     def parseHeader() : PSTHeader = {
-        var raf                    = new RandomAccessFile(pstFile, "r")
+    	raf seek 0
         var header                 = new PSTHeader
         header.magic               = raf.readIntLE
         header.crc                 = raf.readIntLE
@@ -99,4 +107,8 @@ class PSTHeaderParser(file: String) {
         bref
     }
 
+}
+
+class PSTPageParser{
+	
 }
