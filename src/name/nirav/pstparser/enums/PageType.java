@@ -17,4 +17,13 @@ public enum PageType {
 	public int getId() {
 		return id;
 	}
+	
+	public static PageType fromByte(byte b){
+		int ub = b & 0xff;
+		for (PageType t : values()) {
+	        if(t.id == ub)
+	        	return t;
+        }
+		throw new IllegalArgumentException("No such page type: " + b);
+	}
 }

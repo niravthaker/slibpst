@@ -1,14 +1,14 @@
 package name.nirav.pstparser.model
 
-import name.nirav.pstparser.enums.PSTFormat
+import name.nirav.pstparser.enums._
 
 
 class PageTrailer[A <: AnyVal]{
-    var pageType       : Byte  = _
-    var pageTypeRepeat : Byte  = _
-    var pSign          : Short = _
-    var crc            : Int   = _
-    var bid            : A       = _
+    var pageType       : PageType  = _
+    var pageTypeRepeat : PageType  = _
+    var pSign          : Short     = _
+    var crc            : Int       = _
+    var bid            : A         = _
 }
 
 trait Trailer[A <: AnyVal]{
@@ -17,20 +17,59 @@ trait Trailer[A <: AnyVal]{
 
 trait BitMap{
     val rgb     = new java.util.BitSet(496 * 8)
-    def reserve(pageNum : Int) = rgb set   pageNum
-    def free   (pageNum : Int) = rgb clear pageNum
+    def reserve(pageNum : Int) =   rgb set   pageNum
+    def free   (pageNum : Int) =   rgb clear pageNum
+    def isFree (pageNum : Int) = !(rgb get   pageNum)
 }
 
 class AMapPage[A <: AnyVal] extends Trailer[A] with BitMap{
 	
 }
 object AMapPageParser{
-	def parse(bytes : Array[Byte], format : PSTFormat){
-//		if(format == PSTFormat.ANSI)
-////			return new AMapPage[Int](bytes)
-//		else 
-////			return new AMapPage[Long](bytes)
-//			
+	import java.nio._
+	
+	def parse(bytes : Array[Byte], format : PSTFormat)  = {
+		val bb = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN);
+		format match {
+			case PSTFormat.ANSI    => parseANSIPage(bb)
+			case PSTFormat.UNICODE => parseUnicodePage(bb)
+		}
+	}
+	
+	def parseUnicodePage(bb : ByteBuffer) = {
+		val amap = new AMapPage[Long]
+        basicPageParse(bb, amap)
+		amap.trailer.bid = bb.getLong
+		amap
+	}
+	
+	def parseANSIPage(bb : ByteBuffer) = {
+		bb.getInt // Unused padding
+		val amap = new AMapPage[Int]
+        basicPageParse(bb, amap)
+		amap.trailer.bid = bb.getInt
+		amap
+	}
+	
+	def basicPageParse[A <: AnyVal](bb : ByteBuffer, amap : AMapPage[A]) = {
+		for(i <- 0 to 495){ // 496 bytes
+			stripBits(amap, i, bb.get)
+		}
+		amap.trailer.pageType 		 = PageType.fromByte(bb.get)
+		amap.trailer.pageTypeRepeat  = PageType.fromByte(bb.get)
+		amap.trailer.pSign           = bb.getShort
+		amap.trailer.crc             = bb.getInt
+	}
+	
+	def stripBits[A <: AnyVal](amap: AMapPage[A], index: Int, value : Byte) = {
+		val lsbMask = 0x0001
+		var intVal = value * 8;
+		val to     = index + 8
+		for(i <- index to to){
+			val firstBit = (intVal & lsbMask) == 0x1
+			amap.rgb.set(i, firstBit)
+			intVal = intVal >>> 1
+		}
 	}
 }
 
@@ -38,8 +77,13 @@ class PageMap[A <: AnyVal] extends AMapPage{
     override def reserve(pageNum : Int) { 
         iterate8(pageNum, super.reserve)
     }
-    override def free   (pageNum : Int) {
+    override def free(pageNum : Int) {
         iterate8(pageNum, super.free)
+    }
+    override def isFree(pageNum : Int) = {
+    	var i = true;
+    	iterate8(pageNum, (j) => i &= super.isFree(j))
+    	i
     }
     
     def iterate8(s : Int, f: (Int) => Unit){
@@ -52,7 +96,7 @@ class DListPageEntry(word: Int){
     val _20BitMask = 0xFFFFF000
     
     def getAMapPageNum   = (word &  _20BitMask) >>> 12
-    def getAMapFreeSlots = word & ~_20BitMask
+    def getAMapFreeSlots =  word & ~_20BitMask
     
 }
 

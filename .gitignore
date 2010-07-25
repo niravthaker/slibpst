@@ -1,3 +1,4 @@
 bin
+*.pst
 *.class
 *.scala_dependencies

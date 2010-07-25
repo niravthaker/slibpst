@@ -38,7 +38,13 @@ class PSTHeaderParserTest {
     }
     
     @Test def lookupFirstAMap{
-    	p.firstAMap
+    	val page = p.firstAMap
+    	assertEquals(PageType.AllocationMap, page.trailer.pageType)
+    	assertEquals(PageType.AllocationMap, page.trailer.pageTypeRepeat)
+    	assertNotNull(page.trailer.pSign)
+    	assertNotNull(page.trailer.crc)
+    	assertNotNull(page.trailer.bid)
+
     }
     
 }

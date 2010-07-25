@@ -5,16 +5,22 @@ import Constants._
 import name.nirav.pstparser.model._
 import name.nirav.pstparser.enums._
 
-class PSTHeaderParser(file: String) {
-    val raf     = new RandomAccessFile(new File(file), "r")    
+class PSTHeaderParser(file: File) {
+    val raf     = new RandomAccessFile(file, "r")
+
+    def this(fileName: String){
+    	this(new File(fileName))
+    }
+    
     implicit def HEtoLE(ra: RandomAccessFile) = new RAFImplicit(ra)
 
-    def firstAMap{
+    
+    def firstAMap = {
     	val header = parseHeader
-    	val isAnsi = header.version  == PSTFormat.ANSI
     	raf seek AMAP_FILE_OFFSET
-    	val amap = new AMapPage
-    	
+    	val pageData = new Array[Byte](512)
+    	raf.read(pageData)
+    	AMapPageParser.parse(pageData, header.version)
     }
     
     def parseHeader() : PSTHeader = {
