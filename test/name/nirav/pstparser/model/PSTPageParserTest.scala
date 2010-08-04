@@ -19,12 +19,10 @@ class PSTPageParserTest {
 	@Test def pageMapTest{
     	val pm = new PageMap
     	pm.reserve(10)
-    	for(i <- 10 to 18)
-    		assertTrue(pm.rgb.get(i))
+    	(10 to 18) foreach { i=> assertTrue(pm.rgb.get(i)) }
     	assertFalse(pm.isFree(10))
     	pm.free(10)
-    	for(i <- 10 to 18)
-    		assertFalse(pm.rgb.get(i))
+    	(10 to 18) foreach { i => assertFalse(pm.rgb.get(i))}
     	assertTrue(pm.isFree(10))
     }
     
@@ -35,7 +33,7 @@ class PSTPageParserTest {
     }
     
     @Test def testAMapPageParse{
-    	val raf = Utils.loadFile("archive.pst")
+    	val raf = Utils.loadRandomAccessFile("archive.pst")
     	val bytes = new Array[Byte](512)
     	raf.seek(Constants.AMAP_FILE_OFFSET)
     	raf.read(bytes)

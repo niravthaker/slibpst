@@ -3,12 +3,24 @@ package name.nirav.pstparser.model
 import name.nirav.pstparser.enums._
 
 
+class BlockID[A <: AnyVal] (bid: A){
+	
+	def isInternal : Boolean = bid match{ 
+        case a : Int  => (1 & (a >> 30)) == 1
+        case a : Long => (1 & (a >> 62)) == 1
+        case _        => throw new java.lang.IllegalArgumentException("Unexpected type of bid : " + bid)
+    }
+	
+	def value = bid
+    
+	
+}
 class PageTrailer[A <: AnyVal]{
     var pageType       : PageType  = _
     var pageTypeRepeat : PageType  = _
     var pSign          : Short     = _
     var crc            : Int       = _
-    var bid            : A         = _
+    var bid            : BlockID[A]= _
 }
 
 trait Trailer[A <: AnyVal]{
@@ -39,7 +51,7 @@ object AMapPageParser{
 	def parseUnicodePage(bb : ByteBuffer) = {
 		val amap = new AMapPage[Long]
         basicPageParse(bb, amap)
-		amap.trailer.bid = bb.getLong
+		amap.trailer.bid = new BlockID(bb.getLong)
 		amap
 	}
 	
@@ -47,7 +59,7 @@ object AMapPageParser{
 		bb.getInt // Unused padding
 		val amap = new AMapPage[Int]
         basicPageParse(bb, amap)
-		amap.trailer.bid = bb.getInt
+		amap.trailer.bid = new BlockID(bb.getInt)
 		amap
 	}
 	
@@ -137,4 +149,59 @@ class NBTEntry[A <: AnyVal]{
     var nidParent  : Int = _
     
     def hasSubnode = bidSub != 0
+}
+
+class BlockTrailer[A <: AnyVal]{
+	var size     : Short      = _
+	var bSign    : Short      = _
+	var crc      : Int        = _
+	var bid      : BlockID[A] = _
+}
+
+class LeafBlockEntry[A <: AnyVal] {
+    var nid     : A          = _
+    var bidData : BlockID[A] = _
+    var bidChild: BlockID[A] = _
+}
+
+class XBlock[ A <:  AnyVal] {
+    var blockType       : Byte  = _
+    var indirectionLevel: Byte  = _
+    var entryCount      : Short = _
+    var byteCount       : Int   = _
+    var entries         : Array[A] = _
+}
+
+class HID(hid : Int){
+    def hidType         = hid & 0xF8000000
+    def hidIndex        = hid & 0x07FF0000
+    def hidBlockIndex   = hid & 0x0000FFFF
+}
+
+class HeapNodeHeader{
+    var pageMapByteOffset : Short = _
+    var signature         : Byte  = _
+    var clientSign        : Byte  = _
+    var hidUserRoot       : Int   = _
+    var rgbFillLevel      : Int   = _
+}
+
+class HeapNodeBitMapHeader{
+    var hnPageMapByteOffset : Short = _
+    var rgbFillLevel                = new Array[Byte](64)
+}
+
+class HeapNodePageMap{
+    var allocationCount  : Short = _
+    var freeCount        : Short = _
+    var allocationTabl   : Array[Int] = _
+}
+
+class BTreeHeapHeader{
+    var bType           : Byte = _
+    var sizeKey         : Byte = _
+    var sizeData        : Byte = _
+    var indexDepth      : Byte = _
+    var hid             : HID  = _
+    
 }

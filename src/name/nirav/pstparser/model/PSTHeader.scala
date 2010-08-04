@@ -60,16 +60,10 @@ class PSTRoot[A <: AnyVal]{
 
 
 class BRef[A <: AnyVal]{
-    var bid : A = _
+    var bid : BlockID[A] = _
     var ib  : A  = _
     
-    def isInternal : Boolean = bid match{ 
-        case a : Int  => (1 & (a >> 30)) == 1
-        case a : Long => (1 & (a >> 62)) == 1
-        case _ => throw new java.lang.IllegalArgumentException("Unexpected type of bid : " + bid)
-    }
-    
-    def bidIndex  : A = { return bid /*TODO: Return appropriate val*/}
+    def bidIndex  : A = { return bid.value /*TODO: Return appropriate val*/}
     def byteIndex : A = { return ib }
 }
 

@@ -109,7 +109,7 @@ class PSTHeaderParser(file: File) {
     
     def parseBRef[A <: AnyVal](raf: RandomAccessFile, f: RandomAccessFile => A) = {
         var bref = new BRef[A]
-        bref.bid = f(raf);bref.ib = f(raf)
+        bref.bid = new BlockID(f(raf)); bref.ib = f(raf)
         bref
     }
 
