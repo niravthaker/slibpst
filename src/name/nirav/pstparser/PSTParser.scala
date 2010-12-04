@@ -14,7 +14,26 @@ class PSTHeaderParser(file: File) {
     
     implicit def HEtoLE(ra: RandomAccessFile) = new RAFImplicit(ra)
 
-    
+    def list = {
+        val header = parseHeader
+        if(header.version == PSTFormat.ANSI)
+            readAnsi(header)
+        else
+            readUnicode(header)
+        
+    }
+    def readAnsi(header: PSTHeader) {
+        val root = header.pstHeaderExtention.asInstanceOf[PSTHeaderExtension[Int]].root
+        val bid = root.brefBBT.bid.value
+        val ib = root.brefBBT.ib 
+        raf.seek(ib)
+    }
+    def readUnicode(header: PSTHeader) {
+        val root = header.pstHeaderExtention.asInstanceOf[PSTHeaderExtension[Long]].root
+        val bid = root.brefBBT.bid.value
+        val ib = root.brefBBT.ib
+        raf.seek(ib)
+    }
     def firstAMap = {
     	val header = parseHeader
     	raf seek AMAP_FILE_OFFSET
@@ -35,6 +54,7 @@ class PSTHeaderParser(file: File) {
         header.platformAccess      = raf.readByte
         /*header.reserved1         = */raf.skipBytes(4)
         /*header.reserved2         = */raf.skipBytes(4)
+
         
         if(header.version == PSTFormat.ANSI ){
             continueAnsiParsing(raf, header)
